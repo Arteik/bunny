@@ -1,8 +1,10 @@
+use linkme::distributed_slice;
 use serde::{Deserialize, Serialize};
 use warp::Filter;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct RawQuery {
+    /// Raw query string; ?@decorator cmd ?[..args]
     q: String,
 }
 
@@ -102,6 +104,16 @@ trait BunnyAlias {
 trait BunnyAction {
     fn execute(args: bunny::BunnyArgs) -> impl warp::Reply;
 }
+
+trait BunnyCommand: BunnyAlias + BunnyAction {}
+
+impl<T: BunnyAlias + BunnyAction> BunnyCommand for T {}
+
+
+#[distributed_slice]
+pub static COMMANDS: [Box<dyn BunnyCommand>];
+
+
 
 struct Youtube;
 
