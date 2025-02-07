@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use linkme::distributed_slice;
 use serde::{Deserialize, Serialize};
 use warp::Filter;
@@ -98,37 +100,85 @@ async fn main() {
 }
 
 trait BunnyAlias {
-    fn aliases() -> &'static [&'static str];
+    fn aliases(&self) -> &'static [&'static str];
 }
 
 trait BunnyAction {
-    fn execute(args: bunny::BunnyArgs) -> impl warp::Reply;
+    fn execute(&self, args: bunny::BunnyArgs) -> Box<dyn warp::Reply>;
 }
 
 trait BunnyCommand: BunnyAlias + BunnyAction {}
-
-impl<T: BunnyAlias + BunnyAction> BunnyCommand for T {}
-
+ 
+impl<T: BunnyAlias + BunnyAction + Send + Sync> BunnyCommand for T {}
 
 #[distributed_slice]
 pub static COMMANDS: [Box<dyn BunnyCommand>];
 
-
-
 struct Youtube;
 
+static FOO: Box<dyn BunnyCommand + Send + Sync> = Box::new(Youtube::new());
+
+impl Youtube {
+    const fn new() -> Self {
+        Self
+    }
+}
+
 impl BunnyAlias for Youtube {
-    fn aliases() -> &'static [&'static str] {
+    fn aliases(&self) -> &'static [&'static str] {
         &["youtube", "yt"]
     }
 }
 
 impl BunnyAction for Youtube {
-    fn execute(args: bunny::BunnyArgs) -> impl warp::Reply {
-        format!("www.youtube.com/results?search_query={}", args.args)
-    } 
+    fn execute(&self, args: bunny::BunnyArgs) -> Box<dyn warp::Reply> {
+        Box::new(format!("www.youtube.com/results?search_query={}", args.args))
+    }
 }
 
+// trait BunnyAlias {
+//     fn aliases() -> &'static [&'static str];
+// }
+
+// trait BunnyAction {
+//     fn execute(args: bunny::BunnyArgs) -> impl warp::Reply;
+// }
+
+// trait BunnyCommand: BunnyAlias + BunnyAction {
+//     fn register<F>(
+//         map: &mut HashMap<&'static str, F>,
+//     ) where F: Fn(bunny::BunnyArgs) -> Box<dyn warp::Reply> + 'static;
+// }
+
+// impl<T: BunnyAlias + BunnyAction> BunnyCommand for T {
+//     fn register<F>(
+//         map: &mut HashMap<&'static str, F>,
+//     ) where F: Fn(bunny::BunnyArgs) -> Box<dyn warp::Reply> + 'static {
+//         for alias in T::aliases() {
+//             let x = |args| Box::new(T::execute(args));
+//             map.insert(*alias, x);
+//         }
+//     }
+// }
+
+// // #[distributed_slice]
+// // pub static COMMANDS: [Fn(
+// //     &mut HashMap<&'static str, Box<dyn Fn(bunny::BunnyArgs) -> Box<dyn warp::Reply>>>,
+// // )];
+
+// struct Youtube;
+
+// impl BunnyAlias for Youtube {
+//     fn aliases() -> &'static [&'static str] {
+//         &["youtube", "yt"]
+//     }
+// }
+
+// impl BunnyAction for Youtube {
+//     fn execute(args: bunny::BunnyArgs) -> impl warp::Reply {
+//         format!("www.youtube.com/results?search_query={}", args.args)
+//     }
+// }
 
 // struct Youtube;
 // impl bunny::TemplatedRedirectBunnyAction for Youtube {
