@@ -14,7 +14,7 @@ pub mod bunny {
         /// Modifies BunnyAction behavior; enables targeting
         pub decorator: String,
         /// Resolved to a concrete BunnyAction
-        pub cmd: String,
+        pub cmd: String, // TODO: This should be a regex to support ENG-XXX
         /// Arguments provided to the given BunnyAction
         pub args: String,
     }
