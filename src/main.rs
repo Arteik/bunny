@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use bunny::{BunnyArgs, BunnyFunction};
 use linkme::distributed_slice;
 use serde::{Deserialize, Serialize};
-use warp::{reply::Reply, Filter};
+use warp::{reply, Filter};
 
 pub mod bunny {
     use super::*;
@@ -51,9 +51,9 @@ pub mod bunny {
         fn aliases(&self) -> &'static [&'static str];
     }
     
-    pub type BunnyFunction = Box<dyn Fn(BunnyArgs) -> Box<dyn Reply + 'static> + Send + Sync>;
+    pub type BunnyFunction = Box<dyn Fn(BunnyArgs) -> Box<dyn warp::Reply + 'static> + Send + Sync>;
     pub trait BunnyAction {
-        fn execute(&self, args: bunny::BunnyArgs) -> Box<dyn warp::Reply>;
+        fn hop(&self, args: bunny::BunnyArgs) -> Box<dyn warp::Reply>;
     }
     
     pub trait BunnyCommand: BunnyAlias + BunnyAction {}
@@ -73,7 +73,7 @@ pub fn build_command_map(
             aliases.iter().map(move |&alias| {
                 let handler: BunnyFunction
                     = Box::new(move |args: BunnyArgs| {
-                        cmd().execute(args)
+                        cmd().hop(args)
                     });
                 (alias, handler)
             })
@@ -110,8 +110,8 @@ async fn main() {
         .map(move |p: RawQuery, cmd_map: Arc<HashMap<&str, BunnyFunction>>| {
             let args = BunnyArgs::from(p);
 
-            if let Some(execute_fn) = cmd_map.get(args.cmd.as_str()) {
-                execute_fn(args)
+            if let Some(hop_fn) = cmd_map.get(args.cmd.as_str()) {
+                hop_fn(args)
             } else {
                 Box::new(String::from("Can't find this command!"))
             }
@@ -154,7 +154,7 @@ mod youtube {
     }
 
     impl BunnyAction for Youtube {
-        fn execute(&self, args: BunnyArgs) -> Box<dyn warp::Reply> {
+        fn hop(&self, args: BunnyArgs) -> Box<dyn warp::Reply> {
             let uri = warp::http::Uri::builder()
                 .scheme("https")
                 .authority("youtube.com")
