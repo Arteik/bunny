@@ -96,8 +96,11 @@ struct RawQuery {
 pub static COMMANDS: [fn() -> Box<dyn crate::bunny::BunnyCommand>];
 
 pub async fn serve_bunny() {
+    pretty_env_logger::init();
+    let log = warp::log("rustybunny");
+
     let command_map = Arc::new(build_command_map());
-    println!("(@shomik) {:#?}", build_command_map().keys());
+    println!("Commands: {:?}", build_command_map().keys());
 
     let with_map = warp::any()
         .map({
@@ -105,7 +108,7 @@ pub async fn serve_bunny() {
             move || map_clone.clone()
         });
 
-    let example1 = warp::get()
+    let bunny_router = warp::get()
         .and(warp::path("bunny"))
         .and(warp::query::<RawQuery>())
         .and(with_map) 
@@ -121,11 +124,13 @@ pub async fn serve_bunny() {
 
     let hello_world = warp::get()
         .and(warp::path::end())
-        .map(|| "Hello, World at root!");
-        // .with(log);
+        .map(|| "Hello, world at bunny root!")
+        .with(log);
 
     let routes = hello_world
-        .or(example1);
+        .or(bunny_router);
+
+    println!("Serving at http://localhost:1234");
 
     warp::serve(routes).run(([127, 0, 0, 1], 1234)).await
 }

@@ -1,15 +1,7 @@
-use crate::simple_bunny;
+use crate::templated_bunny;
 
-simple_bunny!(
-    youtube,
+templated_bunny!(
     Youtube,
     aliases = ["youtube", "yt"],
-    hop = |args| {
-        warp::http::Uri::builder()
-            .scheme("https")
-            .authority("youtube.com")
-            .path_and_query(format!("/results?search_query={}", args.args))
-            .build()
-            .unwrap()
-    }
+    uri = "https://www.youtube.com/results?search_query={}"
 );
