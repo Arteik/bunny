@@ -1,7 +1,37 @@
 use crate::templated_bunny;
 
 templated_bunny!(
+    Google,
+    aliases = ["google", "g"],
+    uri = "https://www.google.com/search?q={}"
+);
+
+templated_bunny!(
     Youtube,
     aliases = ["youtube", "yt"],
     uri = "https://www.youtube.com/results?search_query={}"
+);
+
+templated_bunny!(
+    Wikipedia,
+    aliases = ["wiki", "w"],
+    uri = "https://en.wikipedia.org/wiki/{}"
+);
+
+templated_bunny!(
+    CratesIo,
+    aliases = ["crate"],
+    uri = "https://crates.io/search?q={}"
+);
+
+templated_bunny!(
+    NixPkg,
+    aliases = ["nix", "nixpkg"],
+    uri = "https://search.nixos.org/packages?query={}"
+);
+
+templated_bunny!(
+    Noogle,
+    aliases = ["noog", "noogle"],
+    uri = "https://noogle.dev/q?term={}"
 );
