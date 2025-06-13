@@ -1,4 +1,4 @@
-use crate::templated_bunny;
+use crate::{simple_bunny, templated_bunny};
 
 templated_bunny!(
     Google,
@@ -34,4 +34,17 @@ templated_bunny!(
     Noogle,
     aliases = ["noog", "noogle"],
     uri = "https://noogle.dev/q?term={}"
+);
+
+simple_bunny!(
+    Playground,
+    aliases = ["play"],
+    hop = |args| {
+        let uri = match args.args.as_str() {
+            "js" => "https://repljs.com/new",
+            "cpp" => "https://cpp.sh/",
+            "rs" | "rust" | _ => "https://play.rust-lang.org/",
+        };
+        crate::utils::uri_to_redirect(uri.to_string())
+    }
 );

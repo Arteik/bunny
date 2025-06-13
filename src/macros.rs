@@ -52,13 +52,10 @@ macro_rules! templated_bunny {
             $name,
             aliases = [$($alias),*],
             hop = |args| {
-                let uri: warp::http::Uri = format!(
+                crate::utils::uri_to_redirect(format!(
                     $uri_template,
                     &args.args
-                )
-                    .parse()
-                    .unwrap();
-                Box::new(warp::redirect::temporary(uri))
+                ))
             }
 
         }

@@ -10,6 +10,7 @@ pub use linkme;
 
 mod default_commands;
 mod macros;
+mod utils;
 
 pub mod bunny {
     use super::*;
