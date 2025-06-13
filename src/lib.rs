@@ -9,6 +9,7 @@ use warp::Filter;
 pub use linkme;
 
 mod default_commands;
+mod macros;
 
 pub mod bunny {
     use super::*;
@@ -96,6 +97,7 @@ pub static COMMANDS: [fn() -> Box<dyn crate::bunny::BunnyCommand>];
 
 pub async fn serve_bunny() {
     let command_map = Arc::new(build_command_map());
+    println!("(@shomik) {:#?}", build_command_map().keys());
 
     let with_map = warp::any()
         .map({
@@ -125,5 +127,5 @@ pub async fn serve_bunny() {
     let routes = hello_world
         .or(example1);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await
+    warp::serve(routes).run(([127, 0, 0, 1], 1234)).await
 }
