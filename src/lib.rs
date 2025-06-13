@@ -1,5 +1,5 @@
-use std::{collections::HashMap, sync::Arc};
 use std::fmt::Debug;
+use std::{collections::HashMap, sync::Arc};
 
 use bunny::{BunnyArgs, BunnyFunction};
 use linkme::distributed_slice;
@@ -56,31 +56,24 @@ pub mod bunny {
     pub trait BunnyAlias {
         fn aliases(&self) -> &'static [&'static str];
     }
-    
+
     pub type BunnyFunction = Box<dyn Fn(BunnyArgs) -> Box<dyn warp::Reply + 'static> + Send + Sync>;
     pub trait BunnyAction {
         fn hop(&self, args: bunny::BunnyArgs) -> Box<dyn warp::Reply>;
     }
-    
+
     pub trait BunnyCommand: BunnyAlias + BunnyAction {}
 
     impl<T: BunnyAlias + BunnyAction + Send + Sync + Debug> BunnyCommand for T {}
 }
 
-pub fn build_command_map(
-) -> HashMap<
-    &'static str,
-    BunnyFunction
-> {
+pub fn build_command_map() -> HashMap<&'static str, BunnyFunction> {
     COMMANDS
         .iter()
         .flat_map(|cmd| {
             let aliases = cmd().aliases();
             aliases.iter().map(move |&alias| {
-                let handler: BunnyFunction
-                    = Box::new(move |args: BunnyArgs| {
-                        cmd().hop(args)
-                    });
+                let handler: BunnyFunction = Box::new(move |args: BunnyArgs| cmd().hop(args));
                 (alias, handler)
             })
         })
@@ -103,33 +96,35 @@ pub async fn serve_bunny() {
     let command_map = Arc::new(build_command_map());
     println!("Commands: {:?}", build_command_map().keys());
 
-    let with_map = warp::any()
-        .map({
-            let map_clone  = command_map.clone();
-            move || map_clone.clone()
-        });
+    let with_map = warp::any().map({
+        let map_clone = command_map.clone();
+        move || map_clone.clone()
+    });
 
     let bunny_router = warp::get()
         .and(warp::path("bunny"))
         .and(warp::query::<RawQuery>())
-        .and(with_map) 
-        .map(move |p: RawQuery, cmd_map: Arc<HashMap<&str, BunnyFunction>>| {
-            let args = BunnyArgs::from(p);
+        .and(with_map)
+        .map(
+            move |p: RawQuery, cmd_map: Arc<HashMap<&str, BunnyFunction>>| {
+                let args = BunnyArgs::from(p);
 
-            if let Some(hop_fn) = cmd_map.get(args.cmd.as_str()) {
-                hop_fn(args)
-            } else {
-                Box::new(String::from("Can't find this command!"))
-            }
-        });
+                if let Some(hop_fn) = cmd_map.get(args.cmd.as_str()) {
+                    hop_fn(args)
+                } else {
+                    Box::new(String::from("Can't find this command!"))
+                }
+            },
+        );
 
+    // This should be a static index of the available commands and their aliases. I'd also
+    // like some  representation of the hop function but maybe it is extra effort
     let hello_world = warp::get()
         .and(warp::path::end())
         .map(|| "Hello, world at bunny root!")
         .with(log);
 
-    let routes = hello_world
-        .or(bunny_router);
+    let routes = hello_world.or(bunny_router);
 
     println!("Serving at http://localhost:1234");
 

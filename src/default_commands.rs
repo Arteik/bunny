@@ -36,6 +36,12 @@ templated_bunny!(
     uri = "https://noogle.dev/q?term={}"
 );
 
+templated_bunny!(
+    DocsRs,
+    aliases = ["rsdoc", "rsd"],
+    uri = "https://docs.rs/releases/search?query={}"
+);
+
 simple_bunny!(
     Playground,
     aliases = ["play"],
