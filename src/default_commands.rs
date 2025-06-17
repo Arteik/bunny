@@ -20,7 +20,7 @@ templated_bunny!(
 
 templated_bunny!(
     CratesIo,
-    aliases = ["crate"],
+    aliases = ["crate", "crates"],
     uri = "https://crates.io/search?q={}"
 );
 

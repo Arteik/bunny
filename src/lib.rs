@@ -15,7 +15,7 @@ mod utils;
 pub mod bunny {
     use super::*;
 
-    #[derive(Serialize, Deserialize, Debug, Clone)]
+    #[derive(Serialize, Deserialize, Debug, Clone, Default)]
     pub struct BunnyArgs {
         /// Modifies BunnyAction behavior; enables targeting
         pub decorator: String,
@@ -80,7 +80,7 @@ pub fn build_command_map() -> HashMap<&'static str, BunnyFunction> {
         .collect()
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct RawQuery {
     /// Raw query string; ?@decorator cmd ?[..args]
     q: String,
@@ -107,12 +107,14 @@ pub async fn serve_bunny() {
         .and(with_map)
         .map(
             move |p: RawQuery, cmd_map: Arc<HashMap<&str, BunnyFunction>>| {
-                let args = BunnyArgs::from(p);
+                let args = BunnyArgs::from(p.clone());
 
                 if let Some(hop_fn) = cmd_map.get(args.cmd.as_str()) {
                     hop_fn(args)
                 } else {
-                    Box::new(String::from("Can't find this command!"))
+                    let mut google_bargs = BunnyArgs::default();
+                    google_bargs.args = p.q;
+                    (cmd_map.get("google").unwrap())(google_bargs)
                 }
             },
         );
@@ -120,11 +122,12 @@ pub async fn serve_bunny() {
     // This should be a static index of the available commands and their aliases. I'd also
     // like some  representation of the hop function but maybe it is extra effort
     let hello_world = warp::get()
+        .and(warp::path("bunny"))
         .and(warp::path::end())
         .map(|| "Hello, world at bunny root!")
-        .with(log);
+        .with(log); 
 
-    let routes = hello_world.or(bunny_router);
+    let routes = bunny_router.or(hello_world);
 
     println!("Serving at http://localhost:1234");
 

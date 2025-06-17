@@ -54,7 +54,7 @@ macro_rules! templated_bunny {
             hop = |args| {
                 crate::utils::uri_to_redirect(format!(
                     $uri_template,
-                    &args.args
+                    urlencoding::encode(&args.args)
                 ))
             }
 
