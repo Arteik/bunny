@@ -8,9 +8,12 @@ use warp::Filter;
 
 pub use linkme;
 
+use crate::table::generate_bunny_table;
+
 mod default_commands;
 mod macros;
 mod utils;
+mod table;
 
 pub mod bunny {
     use super::*;
@@ -125,7 +128,7 @@ pub async fn serve_bunny() {
     let hello_world = warp::get()
         .and(warp::path("bunny"))
         .and(warp::path::end())
-        .map(|| "Hello, world at bunny root!")
+        .map(move || warp::reply::html(generate_bunny_table()))
         .with(log); 
 
     let routes = bunny_router.or(hello_world);

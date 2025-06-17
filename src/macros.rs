@@ -1,4 +1,11 @@
 #[macro_export]
+macro_rules! spaced_name {
+    ($first:ident $( $rest:ident )*) => {
+        concat!(stringify!($first), $( " ", stringify!($rest) ),*)
+    };
+}
+
+#[macro_export]
 macro_rules! simple_bunny {
     (
         $($name:ident)+,
@@ -6,7 +13,7 @@ macro_rules! simple_bunny {
         hop = |$args:ident| $hop_block:block
     ) => {
         paste::paste! {
-            pub mod [ < $($name)+:snake:lower > ] {
+            pub mod [< $($name:snake)_* >] {
                 use crate::bunny::{BunnyAction, BunnyAlias, BunnyArgs, BunnyCommand};
                 use warp;
 
@@ -27,8 +34,7 @@ macro_rules! simple_bunny {
 
                 impl BunnyAlias for [<$($name)+>] {
                     fn name(&self) -> &'static str {
-                        const NAME: &str = concat!($(stringify!($name), " "),+);
-                        NAME.trim_end()
+                        crate::spaced_name!($($name)+)
                     }
 
                     fn aliases(&self) -> &'static [&'static str] {
@@ -53,16 +59,14 @@ macro_rules! templated_bunny {
         aliases = [$($alias:expr),* $(,)?],
         uri = $uri_template:literal
     ) => {
-        paste::paste! {
-            crate::simple_bunny! {
-                [<$($name)+>],
-                aliases = [$($alias),*],
-                hop = |args| {
-                    crate::utils::uri_to_redirect(format!(
-                        $uri_template,
-                        urlencoding::encode(&args.args)
-                    ))
-                }
+        crate::simple_bunny! {
+            $($name)+,
+            aliases = [$($alias),*],
+            hop = |args| {
+                crate::utils::uri_to_redirect(format!(
+                    $uri_template,
+                    urlencoding::encode(&args.args)
+                ))
             }
         }
     };
