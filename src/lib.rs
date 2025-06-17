@@ -54,6 +54,7 @@ pub mod bunny {
     }
 
     pub trait BunnyAlias {
+        fn name(&self) -> &'static str;
         fn aliases(&self) -> &'static [&'static str];
     }
 

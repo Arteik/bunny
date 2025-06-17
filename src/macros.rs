@@ -26,6 +26,11 @@ macro_rules! simple_bunny {
                 }
 
                 impl BunnyAlias for [<$($name)+>] {
+                    fn name(&self) -> &'static str {
+                        const NAME: &str = concat!($(stringify!($name), " "),+);
+                        NAME.trim_end()
+                    }
+
                     fn aliases(&self) -> &'static [&'static str] {
                         &[$($alias),*]
                     }
