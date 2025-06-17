@@ -25,7 +25,7 @@ templated_bunny!(
 );
 
 templated_bunny!(
-    NixPkg,
+    Nix Packages,
     aliases = ["nix", "nixpkg"],
     uri = "https://search.nixos.org/packages?query={}"
 );
@@ -37,7 +37,7 @@ templated_bunny!(
 );
 
 templated_bunny!(
-    DocsRs,
+    Rust Docs,
     aliases = ["rsdoc", "rsd"],
     uri = "https://docs.rs/releases/search?query={}"
 );

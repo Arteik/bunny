@@ -1,37 +1,37 @@
 #[macro_export]
 macro_rules! simple_bunny {
     (
-        $name:ident,
+        $($name:ident)+,
         aliases = [$($alias:expr),* $(,)?],
         hop = |$args:ident| $hop_block:block
     ) => {
         paste::paste! {
-            pub mod [ <$name:lower> ] {
+            pub mod [ < $($name)+:snake:lower > ] {
                 use crate::bunny::{BunnyAction, BunnyAlias, BunnyArgs, BunnyCommand};
                 use warp;
 
                 #[crate::linkme::distributed_slice(crate::COMMANDS)]
                 #[linkme(crate = crate::linkme)]
                 fn register() -> Box<dyn BunnyCommand> {
-                    Box::new($name::new())
+                    Box::new([<$($name)+>]::new())
                 }
 
                 #[derive(Debug)]
-                struct $name;
+                struct [<$($name)+>];
 
-                impl $name {
+                impl [<$($name)+>] {
                     const fn new() -> Self {
                         Self
                     }
                 }
 
-                impl BunnyAlias for $name {
+                impl BunnyAlias for [<$($name)+>] {
                     fn aliases(&self) -> &'static [&'static str] {
                         &[$($alias),*]
                     }
                 }
 
-                impl BunnyAction for $name {
+                impl BunnyAction for [<$($name)+>] {
                     fn hop(&self, $args: BunnyArgs) -> Box<dyn warp::Reply> {
                         $hop_block
                     }
@@ -44,20 +44,21 @@ macro_rules! simple_bunny {
 #[macro_export]
 macro_rules! templated_bunny {
     (
-        $name:ident,
+        $($name:ident)+,
         aliases = [$($alias:expr),* $(,)?],
         uri = $uri_template:literal
     ) => {
-        crate::simple_bunny! {
-            $name,
-            aliases = [$($alias),*],
-            hop = |args| {
-                crate::utils::uri_to_redirect(format!(
-                    $uri_template,
-                    urlencoding::encode(&args.args)
-                ))
+        paste::paste! {
+            crate::simple_bunny! {
+                [<$($name)+>],
+                aliases = [$($alias),*],
+                hop = |args| {
+                    crate::utils::uri_to_redirect(format!(
+                        $uri_template,
+                        urlencoding::encode(&args.args)
+                    ))
+                }
             }
-
         }
     };
 }
