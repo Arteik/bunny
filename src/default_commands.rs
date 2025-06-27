@@ -26,13 +26,13 @@ templated_bunny!(
 
 templated_bunny!(
     Nix Packages,
-    aliases = ["nix", "nixpkg"],
+    aliases = ["nixpkg", "nix"],
     uri = "https://search.nixos.org/packages?query={}"
 );
 
 templated_bunny!(
     Noogle,
-    aliases = ["noog", "noogle"],
+    aliases = ["noogle", "noog"],
     uri = "https://noogle.dev/q?term={}"
 );
 
@@ -40,6 +40,12 @@ templated_bunny!(
     Rust Docs,
     aliases = ["rsdoc", "rsd"],
     uri = "https://docs.rs/releases/search?query={}"
+);
+
+templated_bunny!(
+    ExplainShell,
+    aliases = ["shell", "sh"],
+    uri = "https://explainshell.com/explain?cmd={}"
 );
 
 simple_bunny!(
